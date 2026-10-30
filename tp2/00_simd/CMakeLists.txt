@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.10)
+project(tp LANGUAGES CXX)
+set(TP_SOURCES src/main.cpp)
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake_modules/TpCommon.cmake")
+target_compile_options(${TP_BIN} PRIVATE -mavx2 -mfma)
+#add_subdirectory(corrige)

@@ -1,0 +1,54 @@
+#pragma once
+
+#include <condition_variable>
+#include <functional>
+#include <future>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <stdexcept>
+#include <thread>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+class ThreadPool {
+ public:
+  explicit ThreadPool(std::size_t worker_count);
+  ~ThreadPool();
+
+  ThreadPool(const ThreadPool&) = delete;
+  ThreadPool& operator=(const ThreadPool&) = delete;
+
+  template <class F>
+  auto submit(F&& f) -> std::future<std::invoke_result_t<F>>;
+
+  void close();
+
+ private:
+  void worker_loop();
+
+  std::mutex mutex_;
+  std::condition_variable available_;
+  std::queue<std::function<void()>> tasks_;
+  std::vector<std::thread> workers_;
+  bool closed_ = false;
+};
+
+template <class F>
+auto ThreadPool::submit(F&& f) -> std::future<std::invoke_result_t<F>> {
+  using R = std::invoke_result_t<F>;
+
+  auto task = std::make_shared<std::packaged_task<R()>>(std::forward<F>(f));
+  std::future<R> future = task->get_future();
+
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (closed_) {
+      throw std::runtime_error("pool closed");
+    }
+    tasks_.push([task] { (*task)(); });
+  }
+  available_.notify_one();
+  return future;
+}

@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.10)
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 NEW)
+endif()
+project(tps LANGUAGES CXX)
+
+add_subdirectory(tp2/00_simd)
+add_subdirectory(tp2/01_threads)
+add_subdirectory(tp2/02_shared_queue)
+add_subdirectory(tp2/03_blocking_workers)
+add_subdirectory(tp2/04_semaphore)
+add_subdirectory(tp2/05_futures)
+add_subdirectory(tp2/06_shutdown)
