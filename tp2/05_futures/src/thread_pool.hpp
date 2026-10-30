@@ -49,7 +49,6 @@ auto ThreadPool::submit(F&& f) -> std::future<std::invoke_result_t<F>> {
   // 2. pousser une tâche [task]{ (*task)(); } dans tasks_
   // 3. notify_one (après le unlock)
   // 4. retourner future
-  (void)task;
-  (void)future;
+  
   throw std::runtime_error("TODO: implémenter ThreadPool::submit");
 }

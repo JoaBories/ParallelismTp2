@@ -21,11 +21,12 @@ class SemaphoreGuard {
  public:
   explicit SemaphoreGuard(std::counting_semaphore<kSlots>& sem) : sem_(sem) {
     // TODO: acquire
-    (void)sem_;
+    sem_.acquire();
   }
 
   ~SemaphoreGuard() {
     // TODO: release
+    sem_.release();
   }
 
   SemaphoreGuard(const SemaphoreGuard&) = delete;
@@ -38,6 +39,7 @@ class SemaphoreGuard {
 void use_resource(bool throw_once) {
   // TODO: remplacer l'accès direct par un SemaphoreGuard (ou acquire/release manuels).
   // Le corps ci-dessous doit s'exécuter sous au plus kSlots permissions.
+  SemaphoreGuard guard(slots);
   const int now = in_use.fetch_add(1) + 1;
   int prev = max_in_use.load();
   while (now > prev && !max_in_use.compare_exchange_weak(prev, now)) {
