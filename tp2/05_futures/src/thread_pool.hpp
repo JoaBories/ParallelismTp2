@@ -45,10 +45,15 @@ auto ThreadPool::submit(F&& f) -> std::future<std::invoke_result_t<F>> {
   std::future<R> future = task->get_future();
 
   // TODO:
+  mutex_.lock();
+  if (closed_) throw std::runtime_error("pool closed");
+  tasks_.push([task] { (*task)(); });
+  mutex_.unlock();
+  available_.notify_one();
+  return future;
+    
   // 1. sous mutex : si closed_, lever std::runtime_error("pool closed")
   // 2. pousser une tâche [task]{ (*task)(); } dans tasks_
   // 3. notify_one (après le unlock)
   // 4. retourner future
-  
-  throw std::runtime_error("TODO: implémenter ThreadPool::submit");
 }

@@ -22,9 +22,30 @@ ThreadPool::~ThreadPool() {
 
 void ThreadPool::close() {
   // TODO: sous mutex, closed_ = true ; puis notify_all().
+  mutex_.lock();
+  closed_ = true;
+  mutex_.unlock();
+  available_.notify_all();
 }
 
 void ThreadPool::worker_loop() {
+  for (;;)
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    available_.wait(lock, [this] -> bool { return closed_ || !tasks_.empty(); });
+    if (closed_ && tasks_.empty())
+    {
+      lock.unlock();
+      return;
+    }
+    else
+    {
+      auto task = tasks_.front();
+      tasks_.pop();
+      lock.unlock();
+      task();
+    }
+  }
   // TODO: boucle
   //   unique_lock + wait(prédicat: closed_ || !tasks_.empty())
   //   si closed_ && tasks_.empty() → return
